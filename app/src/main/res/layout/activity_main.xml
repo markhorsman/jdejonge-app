@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    tools:context="com.example.markhorsman.insphireapi.MainActivity">
+
+    <TextView
+        android:id="@+id/informationTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start door te zoeken naar een klant"
+        android:textSize="24sp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <EditText
+        android:id="@+id/barcodeText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:ems="10"
+        android:hint="Barcode"
+        android:inputType="text"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/findStockButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/barcodeText"
+        android:text="Search"
+        android:visibility="gone" />
+
+    <EditText
+        android:id="@+id/customerReferenceText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:ems="10"
+        android:hint="Klant referentie"
+        android:inputType="text"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/findCustomerButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/customerReferenceText"
+        android:text="Zoeken"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/fetchCustomerButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="13dp"
+        android:text="Nieuwe klant ophalen" />
+
+    <Button
+        android:id="@+id/putInRentButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/informationTextView"
+        android:layout_marginTop="30dp"
+        android:text="In huur nemen"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/pullFromRentButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/informationTextView"
+        android:layout_marginTop="30dp"
+        android:text="Uit huur halen"
+        android:visibility="gone" />
+</RelativeLayout>
