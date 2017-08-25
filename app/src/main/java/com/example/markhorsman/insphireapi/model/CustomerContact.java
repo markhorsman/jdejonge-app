@@ -14,4 +14,6 @@ public class CustomerContact {
     public String TELEPHONE;
     public String EMAIL;
     public String REFERENCE;
+    public String CONTNO;
+    public String ESTRETD;
 }

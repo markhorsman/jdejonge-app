@@ -1,16 +1,21 @@
 package com.example.markhorsman.insphireapi;
 
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.NumberPicker;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.markhorsman.insphireapi.api.Insphire;
+import com.example.markhorsman.insphireapi.model.ContItem;
 import com.example.markhorsman.insphireapi.model.CustomerContact;
 import com.example.markhorsman.insphireapi.model.Status;
 import com.example.markhorsman.insphireapi.model.Stock;
@@ -31,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     public static final String BASE_URL = "http://192.168.192.43:8080/";
+    public final int DEFAULT_QUANTITY = 1;
 
     private final String username = "jdejong";
     private final String password = "insphire";
@@ -38,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private String authHeader = "Basic " + Base64.encodeToString(base.getBytes(), Base64.NO_WRAP);
 
     private TextView informationTextView;
+    private TextView customerContactTextView;
     private EditText barcodeText;
     private EditText customerReferenceText;
     private Button findStockButton;
@@ -45,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     private Button fetchCustomerButton;
     private Button putInRentButton;
     private Button pullFromRentButton;
+    private EditText contItemQuantity;
+    private RelativeLayout contItemQuantityParent;
 
     private Gson gson;
     private Retrofit retrofit;
@@ -59,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         informationTextView = (TextView) findViewById(R.id.informationTextView);
+        customerContactTextView = (TextView) findViewById(R.id.customerContactTextView);
         barcodeText = (EditText) findViewById(R.id.barcodeText);
         customerReferenceText = (EditText) findViewById(R.id.customerReferenceText);
         findStockButton = (Button) findViewById(R.id.findStockButton);
@@ -66,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
         fetchCustomerButton = (Button) findViewById(R.id.fetchCustomerButton);
         putInRentButton = (Button) findViewById(R.id.putInRentButton);
         pullFromRentButton = (Button) findViewById(R.id.pullFromRentButton);
+        contItemQuantityParent = (RelativeLayout) findViewById(R.id.contItemQuantityParent);
+        contItemQuantity = (EditText) findViewById(R.id.contItemQuantity);
 
         gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
@@ -89,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
                 fetchCustomerButton.setVisibility(View.GONE);
                 findStockButton.setVisibility(View.GONE);
-                putInRentButton.setVisibility(View.GONE);
+                contItemQuantityParent.setVisibility(View.GONE);
                 pullFromRentButton.setVisibility(View.GONE);
                 barcodeText.setVisibility(View.GONE);
                 findCustomerButton.setVisibility(View.VISIBLE);
@@ -107,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // hide buttons
                 findStockButton.setVisibility(View.GONE);
-                putInRentButton.setVisibility(View.GONE);
+                contItemQuantityParent.setVisibility(View.GONE);
                 pullFromRentButton.setVisibility(View.GONE);
                 getStockItem(barcode);
             }
@@ -131,9 +143,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // hide button
-                putInRentButton.setVisibility(View.GONE);
+                contItemQuantityParent.setVisibility(View.GONE);
                 findStockButton.setVisibility(View.GONE);
-                updateStockStatus(currentStock.ITEMNO, Stock.STATUS_IN_RENT);
+                contItemQuantityParent.setVisibility(View.GONE);
+
+                insertContItem(currentStock.ITEMNO, ContItem.STATUS_CONTRACT_CREATED, Stock.STATUS_IN_RENT, Integer.parseInt(contItemQuantity.getText().toString()), currentCustomerContact);
             }
         };
 
@@ -158,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
     private void getStockItem(String barcode) {
         Log.d(TAG, "About to fetch Stock item!");
 
-        Call<Stock> call = insphire.getStockItem(authHeader, barcode);
+        Call<Stock> call = insphire.getStockItem(authHeader, barcode, currentCustomerContact.CONTNO, currentCustomerContact.ACCT);
         call.enqueue(new Callback<Stock>() {
             @Override
             public void onResponse(Call<Stock> call, Response<Stock> response) {
@@ -166,19 +180,24 @@ public class MainActivity extends AppCompatActivity {
                 Stock stock = response.body();
 
                 if (statusCode == HttpURLConnection.HTTP_OK) {
-                    informationTextView.setText(stock.DESC1);
+                    informationTextView.setText(stock.DESC1 + " (" + stock.ITEMNO + ")");
                     barcodeText.getText().clear();
                     currentStock = stock;
 
                     if (stock.STATUS == Stock.STATUS_AVAILABLE) {
                         // show put in rental button
-                        putInRentButton.setVisibility(View.VISIBLE);
+                        contItemQuantity.setText(String.valueOf(DEFAULT_QUANTITY));
+                        contItemQuantityParent.setVisibility(View.VISIBLE);
                     } else if (stock.STATUS == Stock.STATUS_IN_RENT) {
-                        // show pull from rental button
-                        pullFromRentButton.setVisibility(View.VISIBLE);
+                        // show pull from rental button if we have a ContItem
+                        if (stock.CONTITEM != null) {
+                            pullFromRentButton.setVisibility(View.VISIBLE);
+                        } else {
+                            Snackbar.make(findViewById(android.R.id.content), "Product verhuurd aan andere klant", Snackbar.LENGTH_LONG).show();
+                        }
                     } else {
                         // stock item not available
-                        Toast.makeText(MainActivity.this, "Product niet beschikbaar", Toast.LENGTH_LONG).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Product niet beschikbaar", Snackbar.LENGTH_LONG).show();
                     }
                 } else {
                     showAPIErrorMessage(response);
@@ -207,21 +226,29 @@ public class MainActivity extends AppCompatActivity {
                 CustomerContact customer = response.body();
 
                 if (statusCode == HttpURLConnection.HTTP_OK) {
-                    currentCustomerContact = customer;
+                    if (customer.CONTNO != null) {
+                        currentCustomerContact = customer;
 
-                    informationTextView.setText("Huidige klant: " + customer.NAME);
-                    customerReferenceText.getText().clear();
+                        customerContactTextView.setText("Huidige klant: " + customer.NAME + " (" + customer.CONTNO + ")");
+                        informationTextView.setText("Scan een artikel");
+                        customerReferenceText.getText().clear();
+                        barcodeText.getText().clear();
 
-                    customerReferenceText.setVisibility(View.GONE);
-                    findStockButton.setVisibility(View.VISIBLE);
-                    barcodeText.setVisibility(View.VISIBLE);
+                        customerReferenceText.setVisibility(View.GONE);
+                        findStockButton.setVisibility(View.VISIBLE);
+                        barcodeText.setVisibility(View.VISIBLE);
+                        fetchCustomerButton.setVisibility(View.VISIBLE);
+                    } else {
+                        currentCustomerContact = null;
+                        customerContactTextView.setText("Kies een andere klant");
+                        findCustomerButton.setVisibility(View.VISIBLE);
+                        Snackbar.make(findViewById(android.R.id.content), "Klant heeft geen contract", Snackbar.LENGTH_LONG).show();
+                    }
                 } else {
                     showAPIErrorMessage(response);
 
                     findCustomerButton.setVisibility(View.VISIBLE);
                 }
-
-                fetchCustomerButton.setVisibility(View.VISIBLE);
             }
 
             @Override
@@ -249,10 +276,10 @@ public class MainActivity extends AppCompatActivity {
                         if (status == Stock.STATUS_IN_RENT) {
                             pullFromRentButton.setVisibility(View.VISIBLE);
                         } else {
-                            putInRentButton.setVisibility(View.VISIBLE);
+                            contItemQuantityParent.setVisibility(View.VISIBLE);
                         }
 
-                        Toast.makeText(MainActivity.this, "Artikel opgeslagen" , Toast.LENGTH_LONG).show();
+                        Snackbar.make(findViewById(android.R.id.content), "Artikel opgeslagen", Snackbar.LENGTH_LONG).show();
                     } else {
                         currentStock.STATUS = originalStockStatus;
                     }
@@ -274,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
                 if (status == Stock.STATUS_IN_RENT) {
                     pullFromRentButton.setVisibility(View.VISIBLE);
                 } else {
-                    putInRentButton.setVisibility(View.VISIBLE);
+                    contItemQuantityParent.setVisibility(View.VISIBLE);
                 }
 
                 currentStock.STATUS = originalStockStatus;
@@ -282,16 +309,58 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void insertContItem(String itemno, int constStatus, int stockStatus, int qty, CustomerContact customerContact) {
+        if (qty < DEFAULT_QUANTITY) {
+            qty = DEFAULT_QUANTITY;
+        }
+
+        Call<Status> call = insphire.insertContItem(authHeader, itemno, constStatus, stockStatus, qty, customerContact);
+        call.enqueue(new Callback<Status>() {
+            @Override
+            public void onResponse(Call<Status> call, Response<Status> response) {
+                int statusCode = response.code();
+
+                if (statusCode == HttpURLConnection.HTTP_OK) {
+                    Boolean resultStatus = response.body().status;
+                    if (resultStatus == true) {
+                        pullFromRentButton.setVisibility(View.VISIBLE);
+                        currentStock.STATUS = Stock.STATUS_IN_RENT;
+
+                        if (currentStock.CONTITEM != null) {
+                            currentStock.CONTITEM.STATUS = ContItem.STATUS_IN_RENT;
+                        }
+
+                        Snackbar.make(findViewById(android.R.id.content), "Artikel opgeslagen en contract item aangemaakt.", Snackbar.LENGTH_LONG).show();
+                    }
+                } else {
+                    showAPIErrorMessage(response);
+                    contItemQuantityParent.setVisibility(View.VISIBLE);
+                }
+
+                findStockButton.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onFailure(Call<Status> call, Throwable t) {
+                showAPIFailureMessage(t);
+                Log.d(TAG, t.getMessage());
+
+                findStockButton.setVisibility(View.VISIBLE);
+                contItemQuantityParent.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
     private void showAPIErrorMessage(Response response) {
         try {
             JSONObject jObjError = new JSONObject(response.errorBody().string());
-            Toast.makeText(this, jObjError.getString("message"), Toast.LENGTH_LONG).show();
+            Snackbar.make(findViewById(android.R.id.content), jObjError.getString("message"), Snackbar.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+            Snackbar.make(findViewById(android.R.id.content), e.getMessage(), Snackbar.LENGTH_LONG).show();
         }
     }
 
     private void showAPIFailureMessage(Throwable t) {
-        Toast.makeText(this, t.getMessage(), Toast.LENGTH_LONG).show();
+        Snackbar.make(findViewById(android.R.id.content), t.getMessage(), Snackbar.LENGTH_LONG).show();
     }
 }

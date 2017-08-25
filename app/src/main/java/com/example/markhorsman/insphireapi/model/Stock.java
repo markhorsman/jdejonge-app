@@ -23,4 +23,5 @@ public class Stock {
     public String ITEMNO;
     public int STATUS;
     public String NLCODE;
+    public ContItem CONTITEM;
 }
