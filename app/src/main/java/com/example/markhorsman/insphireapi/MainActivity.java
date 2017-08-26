@@ -229,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
                     if (customer.CONTNO != null) {
                         currentCustomerContact = customer;
 
+                        customerContactTextView.setVisibility(View.VISIBLE);
                         customerContactTextView.setText("Huidige klant: " + customer.NAME + " (" + customer.CONTNO + ")");
                         informationTextView.setText("Scan een artikel");
                         customerReferenceText.getText().clear();
