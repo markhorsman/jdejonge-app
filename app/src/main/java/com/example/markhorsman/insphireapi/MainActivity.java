@@ -1,6 +1,7 @@
 package com.example.markhorsman.insphireapi;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.AsyncTask;
 //import android.support.design.widget.Snackbar;
 //import android.support.v7.app.AppCompatActivity;
@@ -30,6 +31,7 @@ import com.example.markhorsman.insphireapi.model.Stock;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import com.readystatesoftware.systembartint.SystemBarTintManager;
 import com.symbol.emdk.EMDKManager;
 import com.symbol.emdk.EMDKResults;
 import com.symbol.emdk.EMDKManager.EMDKListener;
@@ -117,6 +119,16 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // create our manager instance after the content view is set
+        SystemBarTintManager tintManager = new SystemBarTintManager(this);
+        // enable status bar tint
+        tintManager.setStatusBarTintEnabled(true);
+        // enable navigation bar tint
+        tintManager.setNavigationBarTintEnabled(true);
+
+        // set a custom tint color for all system bars
+        tintManager.setTintColor(Color.RED);
+
         textViewData = (TextView)findViewById(R.id.textViewData);
         textViewStatus = (TextView)findViewById(R.id.textViewStatus);
 
@@ -153,7 +165,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
             @Override
             public void onClick(View v) {
                 // reset fields and textview
-                informationTextView.setText("");
+                informationTextView.setText("Scan een barcode");
 
                 currentCustomerContact = null;
                 currentStock = null;
@@ -676,7 +688,10 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                     if (stock.STATUS == Stock.STATUS_AVAILABLE) {
                         // show put in rental button
                         contItemQuantity.setText(String.valueOf(DEFAULT_QUANTITY));
-                        contItemQuantityParent.setVisibility(View.VISIBLE);
+
+                        if (stock.UNIQUE == 0) {
+                            contItemQuantityParent.setVisibility(View.VISIBLE);
+                        }
                     } else if (stock.STATUS == Stock.STATUS_IN_RENT) {
                         // show pull from rental button if we have a ContItem
                         if (stock.CONTITEM != null) {

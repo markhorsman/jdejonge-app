@@ -24,4 +24,5 @@ public class Stock {
     public int STATUS;
     public String NLCODE;
     public ContItem CONTITEM;
+    public int UNIQUE;
 }
