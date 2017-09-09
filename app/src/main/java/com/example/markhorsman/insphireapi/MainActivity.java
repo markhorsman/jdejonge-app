@@ -62,6 +62,8 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static android.R.id.message;
+
 public class MainActivity extends Activity implements EMDKListener, com.symbol.emdk.barcode.Scanner.DataListener, com.symbol.emdk.barcode.Scanner.StatusListener, ScannerConnectionListener, CompoundButton.OnCheckedChangeListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -108,6 +110,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
     private Stock currentStock;
 
     private int scanAction;
+    private Boolean pauseScanProcessing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,6 +126,8 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         if (results.statusCode != EMDKResults.STATUS_CODE.SUCCESS) {
             textViewStatus.setText("Status: " + "EMDKManager object request failed!");
         }
+
+        pauseScanProcessing = false;
 
         informationTextView = (TextView) findViewById(R.id.informationTextView);
         customerContactTextView = (TextView) findViewById(R.id.customerContactTextView);
@@ -452,6 +457,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                 // Submit a new read.
                 scanner.read();
 
+                pauseScanProcessing = false;
                 bContinuousMode = true;
 
                 new AsyncUiControlUpdate().execute(false);
@@ -469,6 +475,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         if (scanner != null) {
 
             try {
+                pauseScanProcessing = false;
 
                 // Reset continuous flag
                 bContinuousMode = false;
@@ -555,17 +562,27 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                     dataLength = 0;
                 }
 
+                if (pauseScanProcessing) {
+                    return;
+                }
+
                 Log.d(TAG, "Result from scanner: " + result);
 
                 // what is the current action?
                 switch (scanAction) {
                     case SCAN_ACTION_FIND_CUSTOMER:
+                        informationTextView.setText("Ophalen klant met referentie " + result + "...");
+                        pauseScanProcessing = true;
                         getCustomerContact(result);
                         break;
                     case SCAN_ACTION_FIND_STOCK:
+                        informationTextView.setText("Ophalen artikel met code " + result + "...");
+                        pauseScanProcessing = true;
                         getStockItem(result);
                         break;
                 }
+            } else {
+                Log.d(TAG, "no barcode/qrcode scanned.");
             }
         }
     }
@@ -642,7 +659,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         }
     }
 
-    private void getStockItem(String barcode) {
+    private void getStockItem(final String barcode) {
         Log.d(TAG, "About to fetch Stock item!");
 
         Call<Stock> call = insphire.getStockItem(authHeader, barcode, currentCustomerContact.CONTNO, currentCustomerContact.ACCT);
@@ -672,22 +689,32 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                         Toast.makeText(getApplicationContext(), "Product niet beschikbaar", Toast.LENGTH_LONG).show();
                     }
                 } else {
+                    informationTextView.setText("");
                     showAPIErrorMessage(response);
                 }
 
                 findStockButton.setVisibility(View.VISIBLE);
+                stopScan();
             }
 
             @Override
             public void onFailure(Call<Stock> call, Throwable t) {
-                showAPIFailureMessage(t);
+                String msg = t.getMessage();
+
+                if (t.getMessage() == null || msg.length() < 1) {
+                    msg = "Artikel met code " + barcode + " niet gevonden";
+                }
+
+                stopScan();
+                informationTextView.setText("");
+                showAPIFailureMessage(msg);
                 findStockButton.setVisibility(View.VISIBLE);
-                Log.d(TAG, t.getMessage());
+                Log.d(TAG, msg);
             }
         });
     }
 
-    private void getCustomerContact(String reference) {
+    private void getCustomerContact(final String reference) {
         Log.d(TAG, "About to fetch Customer!");
 
         Call<CustomerContact> call = insphire.getCustomerContact(authHeader, reference);
@@ -712,6 +739,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                         Toast.makeText(getApplicationContext(), "Klant heeft geen contract", Toast.LENGTH_LONG).show();
                     }
                 } else {
+                    informationTextView.setText("");
                     showAPIErrorMessage(response);
                 }
 
@@ -721,10 +749,17 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
 
             @Override
             public void onFailure(Call<CustomerContact> call, Throwable t) {
-                showAPIFailureMessage(t);
+                String msg = t.getMessage();
+
+                if (t.getMessage() == null || msg.length() < 1) {
+                    msg = "Klant met referentie " + reference + " niet gevonden";
+                }
+
+                showAPIFailureMessage(msg);
                 fetchCustomerButton.setVisibility(View.VISIBLE);
                 stopScan();
-                Log.d(TAG, t.getMessage());
+                informationTextView.setText("");
+                Log.d(TAG, msg);
             }
         });
     }
@@ -757,16 +792,20 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                 }
 
                 findStockButton.setVisibility(View.VISIBLE);
-                stopScan();
             }
 
             @Override
             public void onFailure(Call<Status> call, Throwable t) {
-                showAPIFailureMessage(t);
-                Log.d(TAG, t.getMessage());
+                String msg = t.getMessage();
+
+                if (t.getMessage() == null || msg.length() < 1) {
+                    msg = "Updated artikel mislukt";
+                }
+
+                showAPIFailureMessage(msg);
+                Log.d(TAG, msg);
 
                 findStockButton.setVisibility(View.VISIBLE);
-                stopScan();
 
                 if (status == Stock.STATUS_IN_RENT) {
                     pullFromRentButton.setVisibility(View.VISIBLE);
@@ -810,8 +849,14 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
 
             @Override
             public void onFailure(Call<Status> call, Throwable t) {
-                showAPIFailureMessage(t);
-                Log.d(TAG, t.getMessage());
+                String msg = t.getMessage();
+
+                if (t.getMessage() == null || msg.length() < 1) {
+                    msg = "Aanmaken contract mislukt";
+                }
+
+                showAPIFailureMessage(msg);
+                Log.d(TAG, msg);
 
                 findStockButton.setVisibility(View.VISIBLE);
                 contItemQuantityParent.setVisibility(View.VISIBLE);
@@ -828,7 +873,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         }
     }
 
-    private void showAPIFailureMessage(Throwable t) {
-        Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
+    private void showAPIFailureMessage(String message) {
+        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
     }
 }
