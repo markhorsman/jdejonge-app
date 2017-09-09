@@ -20,54 +20,15 @@
         android:textColor="#ffffff"
         android:textSize="24sp" />
 
-    <EditText
-        android:id="@+id/barcodeText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        
-        android:layout_alignParentTop="true"
-        android:ems="10"
-        android:hint="Barcode"
-        android:inputType="text"
-        android:textColor="#ffffff"
-        android:textColorHint="#ffffff"
-        android:visibility="gone" />
-
     <Button
         android:id="@+id/findStockButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        
-        android:layout_below="@+id/barcodeText"
-        android:layout_marginTop="13dp"
+        android:layout_below="@+id/fetchCustomerButton"
+        android:layout_marginTop="25dp"
         android:background="#202428"
-        android:text="Zoeken"
-        android:textColor="#ff6600"
-        android:visibility="gone" />
-
-    <EditText
-        android:id="@+id/customerReferenceText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:ems="10"
-        android:hint="Klant referentie"
-        android:inputType="text"
-        android:textColor="#ffffff"
-        android:textColorHint="#ffffff"
-        android:visibility="gone" />
-
-    <Button
-        android:id="@+id/findCustomerButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/customerReferenceText"
-        android:text="Zoeken"
-        android:background="#202428"
+        android:text="Artikel scannen"
         android:textColor="#ff6600"
         android:visibility="gone" />
 
@@ -154,42 +115,21 @@
 
     </RelativeLayout>
 
-    <Button
-        android:id="@+id/buttonStartScan"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Start"
-        android:layout_marginTop="91dp"
-        android:layout_below="@+id/informationTextView"
-        android:layout_alignLeft="@+id/textViewStatus" />
-
-    <Button
-        android:id="@+id/buttonStopScan"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Stop"
-        android:layout_alignBaseline="@+id/buttonStartScan"
-        android:layout_alignBottom="@+id/buttonStartScan"
-        android:layout_toRightOf="@+id/buttonStartScan"
-        android:layout_marginLeft="31dp" />
-
     <TextView
         android:id="@+id/textViewStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Status:"
-        android:layout_below="@+id/buttonStartScan"
-        android:layout_alignLeft="@+id/scrollView1"
-        android:layout_marginLeft="12dp"
-        android:layout_marginTop="18dp" />
+        android:layout_above="@+id/scrollView1"
+        android:layout_alignLeft="@+id/scrollView1" />
 
     <ScrollView
         android:id="@+id/scrollView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textViewStatus"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="29dp">
+        android:layout_marginBottom="79dp">
 
         <LinearLayout
             android:layout_width="268dp"
