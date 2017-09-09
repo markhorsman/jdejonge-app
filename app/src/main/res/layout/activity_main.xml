@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
+        
         android:layout_alignParentTop="true"
         android:layout_marginTop="187dp"
         android:text="Start door te zoeken naar een klant"
@@ -25,7 +25,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
+        
         android:layout_alignParentTop="true"
         android:ems="10"
         android:hint="Barcode"
@@ -39,7 +39,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
+        
         android:layout_below="@+id/barcodeText"
         android:layout_marginTop="13dp"
         android:background="#202428"
@@ -52,7 +52,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:ems="10"
         android:hint="Klant referentie"
@@ -66,7 +65,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:layout_below="@+id/customerReferenceText"
         android:text="Zoeken"
         android:background="#202428"
@@ -77,21 +75,18 @@
         android:id="@+id/fetchCustomerButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/customerContactTextView"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="22dp"
         android:background="#202428"
         android:text="Nieuwe klant ophalen"
         android:textColor="#ff6600"
-        android:visibility="visible" />
+        android:visibility="visible"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
 
     <Button
         android:id="@+id/pullFromRentButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:layout_below="@+id/informationTextView"
         android:layout_marginTop="30dp"
         android:text="Uit huur halen"
@@ -105,7 +100,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:text="Huidige klant:"
         android:textColor="#ffffff"
         android:textSize="18sp"
@@ -117,7 +111,6 @@
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:layout_below="@+id/informationTextView"
         android:layout_marginTop="19dp"
         android:padding="0dp"
@@ -131,9 +124,7 @@
             android:layout_alignBaseline="@+id/contItemQuantity"
             android:layout_alignBottom="@+id/contItemQuantity"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
             android:layout_marginLeft="15dp"
-            android:layout_marginStart="15dp"
             android:text="Aantal"
             android:textColor="#ffffff"
             android:textSize="21dp" />
@@ -156,13 +147,66 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
             android:text="In huur nemen"
             android:background="#202428"
             android:textColor="#ff6600"
             android:visibility="visible" />
 
     </RelativeLayout>
+
+    <Button
+        android:id="@+id/buttonStartScan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start"
+        android:layout_marginTop="91dp"
+        android:layout_below="@+id/informationTextView"
+        android:layout_alignLeft="@+id/textViewStatus" />
+
+    <Button
+        android:id="@+id/buttonStopScan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:layout_alignBaseline="@+id/buttonStartScan"
+        android:layout_alignBottom="@+id/buttonStartScan"
+        android:layout_toRightOf="@+id/buttonStartScan"
+        android:layout_marginLeft="31dp" />
+
+    <TextView
+        android:id="@+id/textViewStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Status:"
+        android:layout_below="@+id/buttonStartScan"
+        android:layout_alignLeft="@+id/scrollView1"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="18dp" />
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewStatus"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="29dp">
+
+        <LinearLayout
+            android:layout_width="268dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/textViewData"
+                android:layout_width="242dp"
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
+                android:maxLines="100"
+                android:scrollHorizontally="false"
+                android:scrollbars="vertical" />
+
+        </LinearLayout>
+    </ScrollView>
 
 
 </RelativeLayout>
