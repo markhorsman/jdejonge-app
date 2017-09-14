@@ -44,6 +44,18 @@
         android:layout_alignParentLeft="true" />
 
     <Button
+        android:id="@+id/stopScanButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/informationTextView"
+        android:layout_marginTop="35dp"
+        android:background="#202428"
+        android:text="Annuleren"
+        android:textColor="#ff6600"
+        android:visibility="gone" />
+
+    <Button
         android:id="@+id/pullFromRentButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -88,7 +100,8 @@
             android:layout_marginLeft="15dp"
             android:text="Aantal"
             android:textColor="#ffffff"
-            android:textSize="21dp" />
+            android:textSize="21dp"
+            android:visibility="gone"/>
 
         <EditText
             android:id="@+id/contItemQuantity"
@@ -100,7 +113,8 @@
             android:inputType="number"
             android:textColor="#ffffff"
             android:textColorHint="#ffffff"
-            android:text="1" />
+            android:text="1"
+            android:visibility="gone"/>
 
         <Button
             android:id="@+id/putInRentButton"
@@ -111,7 +125,7 @@
             android:text="In huur nemen"
             android:background="#202428"
             android:textColor="#ff6600"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
     </RelativeLayout>
 

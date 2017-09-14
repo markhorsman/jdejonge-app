@@ -53,6 +53,8 @@ import com.symbol.emdk.barcode.StatusData.ScannerStates;
 import com.symbol.emdk.barcode.StatusData;
 
 import org.json.JSONObject;
+import org.w3c.dom.Text;
+
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -69,7 +71,7 @@ import static android.R.id.message;
 public class MainActivity extends Activity implements EMDKListener, com.symbol.emdk.barcode.Scanner.DataListener, com.symbol.emdk.barcode.Scanner.StatusListener, ScannerConnectionListener, CompoundButton.OnCheckedChangeListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    public static final String BASE_URL = "http://192.168.0.187:8080/";
+    public static final String BASE_URL = "http://185.43.213.52:8080/";
     public final int DEFAULT_QUANTITY = 1;
 
     private static final int SCAN_ACTION_FIND_CUSTOMER = 1;
@@ -97,10 +99,12 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
 
     private TextView informationTextView;
     private TextView customerContactTextView;
+    private TextView quantityTextView;
     private Button findStockButton;
     private Button fetchCustomerButton;
     private Button putInRentButton;
     private Button pullFromRentButton;
+    private Button stopScanButton;
     private EditText contItemQuantity;
     private RelativeLayout contItemQuantityParent;
 
@@ -143,12 +147,14 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
 
         informationTextView = (TextView) findViewById(R.id.informationTextView);
         customerContactTextView = (TextView) findViewById(R.id.customerContactTextView);
+        quantityTextView = (TextView) findViewById(R.id.quantityTextView);
         findStockButton = (Button) findViewById(R.id.findStockButton);
         fetchCustomerButton = (Button) findViewById(R.id.fetchCustomerButton);
         putInRentButton = (Button) findViewById(R.id.putInRentButton);
         pullFromRentButton = (Button) findViewById(R.id.pullFromRentButton);
         contItemQuantityParent = (RelativeLayout) findViewById(R.id.contItemQuantityParent);
         contItemQuantity = (EditText) findViewById(R.id.contItemQuantity);
+        stopScanButton = (Button) findViewById(R.id.stopScanButton);
 
         gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
@@ -161,19 +167,62 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
 
         insphire = retrofit.create(Insphire.class);
 
+        View.OnClickListener stopScanButtonListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fetchCustomerButton.setVisibility(View.VISIBLE);
+
+                switch (scanAction) {
+                    case SCAN_ACTION_FIND_CUSTOMER:
+
+                    break;
+                    case SCAN_ACTION_FIND_STOCK:
+                        findStockButton.setVisibility(View.VISIBLE);
+                    break;
+                }
+
+                if (currentCustomerContact != null) {
+                    findStockButton.setVisibility(View.VISIBLE);
+                }
+
+                if (currentStock != null) {
+                    informationTextView.setText(currentStock.DESC1 + " (" + currentStock.ITEMNO + ")");
+
+                    if (currentStock.STATUS == Stock.STATUS_AVAILABLE) {
+                        // show put in rental button
+                        contItemQuantity.setText(String.valueOf(DEFAULT_QUANTITY));
+                        contItemQuantityParent.setVisibility(View.VISIBLE);
+                        putInRentButton.setVisibility(View.VISIBLE);
+
+                        if (currentStock.UNIQUE == 0) {
+                            contItemQuantity.setVisibility(View.VISIBLE);
+                            quantityTextView.setVisibility(View.VISIBLE);
+                        }
+                    } else if (currentStock.STATUS == Stock.STATUS_IN_RENT) {
+                        // show pull from rental button if we have a ContItem
+                        if (currentStock.CONTITEM != null) {
+                            pullFromRentButton.setVisibility(View.VISIBLE);
+                        }
+                    }
+                }
+
+                stopScan();
+            }
+        };
+
         View.OnClickListener fetchCustomerButtonListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // reset fields and textview
                 informationTextView.setText("Scan een barcode");
 
-                currentCustomerContact = null;
-                currentStock = null;
-
                 fetchCustomerButton.setVisibility(View.GONE);
                 findStockButton.setVisibility(View.GONE);
                 contItemQuantityParent.setVisibility(View.GONE);
+                putInRentButton.setVisibility(View.GONE);
+                contItemQuantity.setVisibility(View.GONE);
                 pullFromRentButton.setVisibility(View.GONE);
+                quantityTextView.setVisibility(View.GONE);
 
                 scanAction = SCAN_ACTION_FIND_CUSTOMER;
 
@@ -188,9 +237,14 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                 // Update informationTextView with the Stock item Desc field value
 
                 // hide buttons
+                informationTextView.setText("Scan een artikel");
                 findStockButton.setVisibility(View.GONE);
                 contItemQuantityParent.setVisibility(View.GONE);
+                putInRentButton.setVisibility(View.GONE);
+                contItemQuantity.setVisibility(View.GONE);
                 pullFromRentButton.setVisibility(View.GONE);
+                quantityTextView.setVisibility(View.GONE);
+                fetchCustomerButton.setVisibility(View.GONE);
 
                 scanAction = SCAN_ACTION_FIND_STOCK;
 
@@ -205,6 +259,9 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                 contItemQuantityParent.setVisibility(View.GONE);
                 findStockButton.setVisibility(View.GONE);
                 contItemQuantityParent.setVisibility(View.GONE);
+                putInRentButton.setVisibility(View.GONE);
+                contItemQuantity.setVisibility(View.GONE);
+                quantityTextView.setVisibility(View.GONE);
 
                 insertContItem(currentStock.ITEMNO, ContItem.STATUS_CONTRACT_CREATED, Stock.STATUS_IN_RENT, Integer.parseInt(contItemQuantity.getText().toString()), currentCustomerContact);
             }
@@ -224,6 +281,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         findStockButton.setOnClickListener(stockButtonListener);
         putInRentButton.setOnClickListener(putInRentButtonListener);
         pullFromRentButton.setOnClickListener(pullFromRentButtonListener);
+        stopScanButton.setOnClickListener(stopScanButtonListener);
 
     }
 
@@ -465,7 +523,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
 
         if (scanner != null) {
             try {
-
+                stopScanButton.setVisibility(View.VISIBLE);
                 // Submit a new read.
                 scanner.read();
 
@@ -483,6 +541,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
     }
 
     private void stopScan() {
+        stopScanButton.setVisibility(View.GONE);
 
         if (scanner != null) {
 
@@ -579,6 +638,8 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                 }
 
                 Log.d(TAG, "Result from scanner: " + result);
+
+                stopScanButton.setVisibility(View.GONE);
 
                 // what is the current action?
                 switch (scanAction) {
@@ -678,6 +739,10 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         call.enqueue(new Callback<Stock>() {
             @Override
             public void onResponse(Call<Stock> call, Response<Stock> response) {
+                findStockButton.setVisibility(View.VISIBLE);
+                fetchCustomerButton.setVisibility(View.VISIBLE);
+                stopScan();
+
                 int statusCode = response.code();
                 Stock stock = response.body();
 
@@ -688,9 +753,12 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                     if (stock.STATUS == Stock.STATUS_AVAILABLE) {
                         // show put in rental button
                         contItemQuantity.setText(String.valueOf(DEFAULT_QUANTITY));
+                        contItemQuantityParent.setVisibility(View.VISIBLE);
+                        putInRentButton.setVisibility(View.VISIBLE);
 
                         if (stock.UNIQUE == 0) {
-                            contItemQuantityParent.setVisibility(View.VISIBLE);
+                            contItemQuantity.setVisibility(View.VISIBLE);
+                            quantityTextView.setVisibility(View.VISIBLE);
                         }
                     } else if (stock.STATUS == Stock.STATUS_IN_RENT) {
                         // show pull from rental button if we have a ContItem
@@ -707,23 +775,28 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                     informationTextView.setText("");
                     showAPIErrorMessage(response);
                 }
-
-                findStockButton.setVisibility(View.VISIBLE);
-                stopScan();
             }
 
             @Override
             public void onFailure(Call<Stock> call, Throwable t) {
+                stopScan();
+                findStockButton.setVisibility(View.VISIBLE);
+                fetchCustomerButton.setVisibility(View.VISIBLE);
+
                 String msg = t.getMessage();
 
                 if (t.getMessage() == null || msg.length() < 1) {
                     msg = "Artikel met code " + barcode + " niet gevonden";
                 }
 
-                stopScan();
-                informationTextView.setText("");
+                if (currentStock != null) {
+                    informationTextView.setText(currentStock.DESC1 + " (" + currentStock.ITEMNO + ")");
+                } else {
+                    informationTextView.setText("");
+                }
+
                 showAPIFailureMessage(msg);
-                findStockButton.setVisibility(View.VISIBLE);
+
                 Log.d(TAG, msg);
             }
         });
@@ -736,6 +809,9 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         call.enqueue(new Callback<CustomerContact>() {
             @Override
             public void onResponse(Call<CustomerContact> call, Response<CustomerContact> response) {
+                stopScan();
+                fetchCustomerButton.setVisibility(View.VISIBLE);
+
                 int statusCode = response.code();
                 CustomerContact customer = response.body();
 
@@ -757,13 +833,13 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                     informationTextView.setText("");
                     showAPIErrorMessage(response);
                 }
-
-                stopScan();
-                fetchCustomerButton.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onFailure(Call<CustomerContact> call, Throwable t) {
+                fetchCustomerButton.setVisibility(View.VISIBLE);
+                stopScan();
+
                 String msg = t.getMessage();
 
                 if (t.getMessage() == null || msg.length() < 1) {
@@ -771,8 +847,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                 }
 
                 showAPIFailureMessage(msg);
-                fetchCustomerButton.setVisibility(View.VISIBLE);
-                stopScan();
+
                 informationTextView.setText("");
                 Log.d(TAG, msg);
             }
@@ -783,7 +858,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         final int originalStockStatus = currentStock.STATUS;
         currentStock.STATUS = status;
 
-        Call<Status> call = insphire.updateStockStatus(authHeader, itemno, currentStock);
+        Call<Status> call = insphire.updateStockStatus(authHeader, itemno, currentCustomerContact.CONTNO, currentStock);
         call.enqueue(new Callback<Status>() {
             @Override
             public void onResponse(Call<Status> call, Response<Status> response) {

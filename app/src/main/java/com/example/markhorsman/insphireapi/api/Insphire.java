@@ -20,8 +20,8 @@ public interface Insphire {
     @GET("customer/{reference}")
     Call<CustomerContact> getCustomerContact(@Header("Authorization") String authHeader, @Path("reference") String reference);
 
-    @PUT("stock/status/{itemno}")
-    Call<Status> updateStockStatus(@Header("Authorization") String authHeader, @Path("itemno") String itemno, @Body Stock stock);
+    @PUT("stock/status/{itemno}/{contno}")
+    Call<Status> updateStockStatus(@Header("Authorization") String authHeader, @Path("itemno") String itemno, @Path("contno") String contno, @Body Stock stock);
 
     @POST("contitem/{itemno}/{contstatus}/{stockstatus}/{qty}")
     Call<Status> insertContItem(
