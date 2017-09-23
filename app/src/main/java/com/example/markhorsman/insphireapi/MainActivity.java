@@ -105,7 +105,10 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
     private Button putInRentButton;
     private Button pullFromRentButton;
     private Button stopScanButton;
+    private Button manualInputButton;
+    private Button manualStockSearchButton;
     private EditText contItemQuantity;
+    private EditText stockItemSearchInput;
     private RelativeLayout contItemQuantityParent;
 
     private Gson gson;
@@ -154,7 +157,10 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         pullFromRentButton = (Button) findViewById(R.id.pullFromRentButton);
         contItemQuantityParent = (RelativeLayout) findViewById(R.id.contItemQuantityParent);
         contItemQuantity = (EditText) findViewById(R.id.contItemQuantity);
+        stockItemSearchInput = (EditText) findViewById(R.id.stockItemSearchInput);
         stopScanButton = (Button) findViewById(R.id.stopScanButton);
+        manualInputButton = (Button) findViewById(R.id.manualInputButton);
+        manualStockSearchButton = (Button) findViewById(R.id.manualStockSearchButton);
 
         gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
@@ -171,6 +177,10 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
             @Override
             public void onClick(View v) {
                 fetchCustomerButton.setVisibility(View.VISIBLE);
+                manualInputButton.setVisibility(View.GONE);
+                manualStockSearchButton.setVisibility(View.GONE);
+                stockItemSearchInput.setVisibility(View.GONE);
+                stockItemSearchInput.setText("");
 
                 switch (scanAction) {
                     case SCAN_ACTION_FIND_CUSTOMER:
@@ -206,7 +216,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                     }
                 }
 
-                stopScan();
+                stopScan(true);
             }
         };
 
@@ -235,6 +245,8 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
             @Override
             public void onClick(View v) {
                 // Update informationTextView with the Stock item Desc field value
+
+                manualInputButton.setVisibility(View.VISIBLE);
 
                 // hide buttons
                 informationTextView.setText("Scan een artikel");
@@ -277,12 +289,43 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
             }
         };
 
+        final View.OnClickListener manualInputButtonListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // hide button
+                manualInputButton.setVisibility(View.GONE);
+
+                // shows buttons
+                stockItemSearchInput.setVisibility(View.VISIBLE);
+                manualStockSearchButton.setVisibility(View.VISIBLE);
+
+                stopScan(false);
+            }
+        };
+
+        final View.OnClickListener manualStockSearchButtonListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // hide buttons
+                stockItemSearchInput.setVisibility(View.GONE);
+                manualStockSearchButton.setVisibility(View.GONE);
+                stopScanButton.setVisibility(View.GONE);
+
+                String searchString = stockItemSearchInput.getText().toString();
+                stockItemSearchInput.setText("");
+
+                informationTextView.setText("Ophalen klant met referentie " + searchString + "...");
+                getStockItem(searchString);
+            }
+        };
+
         fetchCustomerButton.setOnClickListener(fetchCustomerButtonListener);
         findStockButton.setOnClickListener(stockButtonListener);
         putInRentButton.setOnClickListener(putInRentButtonListener);
         pullFromRentButton.setOnClickListener(pullFromRentButtonListener);
         stopScanButton.setOnClickListener(stopScanButtonListener);
-
+        manualInputButton.setOnClickListener(manualInputButtonListener);
+        manualStockSearchButton.setOnClickListener(manualStockSearchButtonListener);
     }
 
     @Override
@@ -540,8 +583,11 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
 
     }
 
-    private void stopScan() {
-        stopScanButton.setVisibility(View.GONE);
+    private void stopScan(Boolean hideStopScanButton) {
+        if (hideStopScanButton || hideStopScanButton == null) {
+            stopScanButton.setVisibility(View.GONE);
+            manualInputButton.setVisibility(View.GONE);
+        }
 
         if (scanner != null) {
 
@@ -741,7 +787,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
             public void onResponse(Call<Stock> call, Response<Stock> response) {
                 findStockButton.setVisibility(View.VISIBLE);
                 fetchCustomerButton.setVisibility(View.VISIBLE);
-                stopScan();
+                stopScan(true);
 
                 int statusCode = response.code();
                 Stock stock = response.body();
@@ -779,7 +825,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
 
             @Override
             public void onFailure(Call<Stock> call, Throwable t) {
-                stopScan();
+                stopScan(true);
                 findStockButton.setVisibility(View.VISIBLE);
                 fetchCustomerButton.setVisibility(View.VISIBLE);
 
@@ -809,7 +855,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         call.enqueue(new Callback<CustomerContact>() {
             @Override
             public void onResponse(Call<CustomerContact> call, Response<CustomerContact> response) {
-                stopScan();
+                stopScan(true);
                 fetchCustomerButton.setVisibility(View.VISIBLE);
 
                 int statusCode = response.code();
@@ -838,7 +884,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
             @Override
             public void onFailure(Call<CustomerContact> call, Throwable t) {
                 fetchCustomerButton.setVisibility(View.VISIBLE);
-                stopScan();
+                stopScan(true);
 
                 String msg = t.getMessage();
 
