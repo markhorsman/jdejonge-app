@@ -89,6 +89,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
     private boolean bContinuousMode = false;
     private List<ScannerInfo> deviceList = null;
 
+    private int defaultIndex = 0;
     private int scannerIndex = 0; // Keep the selected scanner
     private int triggerIndex = 0;
     private int dataLength = 0;
@@ -185,10 +186,10 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                 switch (scanAction) {
                     case SCAN_ACTION_FIND_CUSTOMER:
 
-                    break;
+                        break;
                     case SCAN_ACTION_FIND_STOCK:
                         findStockButton.setVisibility(View.VISIBLE);
-                    break;
+                        break;
                 }
 
                 if (currentCustomerContact != null) {
@@ -497,16 +498,26 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
             default:
                 break;
         }
+
+        textViewData.setText(statusString);
     }
 
     private void enumerateScannerDevices() {
 
         if (barcodeManager != null) {
 
+            int spinnerIndex = 0;
             deviceList = barcodeManager.getSupportedDevicesInfo();
 
             if ((deviceList != null) && (deviceList.size() != 0)) {
-
+                Iterator<ScannerInfo> it = deviceList.iterator();
+                while(it.hasNext()) {
+                    ScannerInfo scnInfo = it.next();
+                    if(scnInfo.isDefaultScanner()) {
+                        defaultIndex = spinnerIndex;
+                    }
+                    ++spinnerIndex;
+                }
             }
             else {
                 textViewStatus.setText("Status: " + "Failed to get the list of supported scanner devices! Please close and restart the application.");
@@ -614,7 +625,7 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
         if (scanner == null) {
 
             if ((deviceList != null) && (deviceList.size() != 0)) {
-                scanner = barcodeManager.getDevice(deviceList.get(scannerIndex));
+                scanner = barcodeManager.getDevice(deviceList.get(defaultIndex));
             }
             else {
                 textViewStatus.setText("Status: " + "Failed to get the specified scanner device! Please close and restart the application.");
