@@ -213,6 +213,14 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                         // show pull from rental button if we have a ContItem
                         if (currentStock.CONTITEM != null) {
                             pullFromRentButton.setVisibility(View.VISIBLE);
+                        } else if (currentStock.UNIQUE == 0) {
+                            // show put in rental button
+                            contItemQuantity.setText(String.valueOf(DEFAULT_QUANTITY));
+                            contItemQuantityParent.setVisibility(View.VISIBLE);
+                            putInRentButton.setVisibility(View.VISIBLE);
+
+                            contItemQuantity.setVisibility(View.VISIBLE);
+                            quantityTextView.setVisibility(View.VISIBLE);
                         }
                     }
                 }
@@ -822,7 +830,18 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                         if (stock.CONTITEM != null) {
                             pullFromRentButton.setVisibility(View.VISIBLE);
                         } else {
-                            Toast.makeText(getApplicationContext(), "Product verhuurd aan andere klant", Toast.LENGTH_LONG).show();
+                            // bulk item, can be rented multiple times
+                            if (stock.UNIQUE == 0) {
+                                // show put in rental button
+                                contItemQuantity.setText(String.valueOf(DEFAULT_QUANTITY));
+                                contItemQuantityParent.setVisibility(View.VISIBLE);
+                                putInRentButton.setVisibility(View.VISIBLE);
+
+                                contItemQuantity.setVisibility(View.VISIBLE);
+                                quantityTextView.setVisibility(View.VISIBLE);
+                            } else {
+                                Toast.makeText(getApplicationContext(), "Product verhuurd aan andere klant", Toast.LENGTH_LONG).show();
+                            }
                         }
                     } else {
                         // stock item not available
@@ -924,11 +943,6 @@ public class MainActivity extends Activity implements EMDKListener, com.symbol.e
                 if (statusCode == HttpURLConnection.HTTP_OK) {
                     Boolean resultStatus = response.body().status;
                     if (resultStatus == true) {
-                        if (status == Stock.STATUS_IN_RENT) {
-//                            pullFromRentButton.setVisibility(View.VISIBLE);
-                        } else {
-//                            contItemQuantityParent.setVisibility(View.VISIBLE);
-                        }
                         Toast.makeText(getApplicationContext(), "Artikel opgeslagen", Toast.LENGTH_LONG).show();
                     } else {
                         currentStock.STATUS = originalStockStatus;
